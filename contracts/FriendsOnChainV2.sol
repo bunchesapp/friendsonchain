@@ -14,10 +14,15 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
-// @title Friends on ChainV2
-// @author Ian Hunter (@ianh), Derek Brown (@derekbrown)
-contract FriendsOnChainV2 is Initializable, ERC1155Upgradeable, OwnableUpgradeable {
+/// @title Friends on ChainV2
+/// @author Ian Hunter (@ianh), Derek Brown (@derekbrown), Jacob Van Schenck (@jacobvs_eth)
+/// @notice V1: Base Contract
+/// @notice V2: Adds ability to add friends to a group post-mint.
+contract FriendsOnChainV2 is
+  Initializable,
+  ERC1155Upgradeable,
+  OwnableUpgradeable
+{
   using Counters for Counters.Counter;
   using Strings for uint256;
 
@@ -39,19 +44,18 @@ contract FriendsOnChainV2 is Initializable, ERC1155Upgradeable, OwnableUpgradeab
   event FriendAddedToGroup(uint256 tokenId, address indexed _to);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
+  constructor() {
+    _disableInitializers();
+  }
 
-  function initialize() initializer public {
-        __ERC1155_init("https://bunches.xyz/foc/metadata/{id}");
-        __Ownable_init();
-        maxSupply = 0;
-        maxOwners = 7;
-        pricePerToken = 0;
-        nextTokenId.increment(); // nextTokenId is initialized to 1, since starting at 0 leads to higher gas cost for the first minter
-
-    }
+  function initialize() public initializer {
+    __ERC1155_init("https://bunches.xyz/foc/metadata/{id}");
+    __Ownable_init();
+    maxSupply = 0;
+    maxOwners = 7;
+    pricePerToken = 0;
+    nextTokenId.increment(); // nextTokenId is initialized to 1, since starting at 0 leads to higher gas cost for the first minter
+  }
 
   /// @notice Mint a token for up to maxOwners addresses.
   /// @dev Payable. Emits GroupCreated event. Checks maxOwners and maxSupply.
@@ -82,24 +86,38 @@ contract FriendsOnChainV2 is Initializable, ERC1155Upgradeable, OwnableUpgradeab
   }
 
   /// @notice Adds new address to an exisiting Group
-  function addFriendToGroup(address _newFriend, uint256 _tokenId) public payable onlyMemberOrOwner(_tokenId) {
-    require(balanceOf(_newFriend, _tokenId) == 0, "Only 1 of each token is allowed per address");
+  /// @dev Payable. Emits FriendAddedToGroup event. Checks maxOwners vs currentOwners. Checks _newFriend isn't already a member
+  /// @param _newFriend address to add to an existing Group
+  /// @param _tokenId FOC token ID that the new address will be added to
+  function addFriendToGroup(address _newFriend, uint256 _tokenId)
+    public
+    payable
+    onlyMemberOrOwner(_tokenId)
+  {
+    require(
+      balanceOf(_newFriend, _tokenId) == 0,
+      "Only 1 of each token is allowed per address"
+    );
     require(msg.value == pricePerToken, "Incorrect payment");
-    address[] memory _ownersOfToken = ownersOfToken[_tokenId]; 
-    require(_ownersOfToken.length < maxOwners, "Maximun number of owners exceeded");
+    address[] memory currentOwners = ownersOfToken[_tokenId];
+    require(
+      currentOwners.length < maxOwners,
+      "Maximun number of owners exceeded"
+    );
+
     _mint(_newFriend, _tokenId, 1, "");
 
-    uint256 length = _ownersOfToken.length + 1;
+    uint256 length = currentOwners.length + 1;
     address[] memory _newOwnersOfToken = new address[](length);
-    for (uint256 i = 0; i < length - 1; i++){
-      _newOwnersOfToken[i] = _ownersOfToken[i];
+    for (uint256 i = 0; i < length - 1; i++) {
+      _newOwnersOfToken[i] = currentOwners[i];
     }
     _newOwnersOfToken[length - 1] = _newFriend;
     ownersOfToken[_tokenId] = _newOwnersOfToken;
 
     emit FriendAddedToGroup(_tokenId, _newFriend);
   }
-  
+
   /// @notice Returns whether the given address is a member of a given tokenId.
   /// @param _addr address for potential member
   /// @param _tokenId queried FOC token ID
@@ -128,7 +146,7 @@ contract FriendsOnChainV2 is Initializable, ERC1155Upgradeable, OwnableUpgradeab
   /// @notice Returns the owners of a specific token
   /// @param _tokenId the FOC token ID
   /// @return Owners of a token as an array of addresses
-  function ownersOf(uint256 _tokenId) public view returns(address[] memory) {
+  function ownersOf(uint256 _tokenId) public view returns (address[] memory) {
     return ownersOfToken[_tokenId];
   }
 
@@ -161,7 +179,10 @@ contract FriendsOnChainV2 is Initializable, ERC1155Upgradeable, OwnableUpgradeab
 
   /// @notice Requires caller to own this token or be the owner
   modifier onlyMemberOrOwner(uint256 _tokenId) {
-    require(isMember(msg.sender, _tokenId) || msg.sender == owner(), "Must be Owner or Group Member");
+    require(
+      isMember(msg.sender, _tokenId) || msg.sender == owner(),
+      "Must be Owner or Group Member"
+    );
     _;
   }
 }

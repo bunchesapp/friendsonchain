@@ -14,10 +14,13 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
-// @title Friends on Chain
-// @author Ian Hunter (@ianh), Derek Brown (@derekbrown)
-contract FriendsOnChain is Initializable, ERC1155Upgradeable, OwnableUpgradeable {
+/// @title Friends on Chain
+/// @author Ian Hunter (@ianh), Derek Brown (@derekbrown), Jacob Van Schenck (@jacobvs_eth)
+contract FriendsOnChain is
+  Initializable,
+  ERC1155Upgradeable,
+  OwnableUpgradeable
+{
   using Counters for Counters.Counter;
   using Strings for uint256;
 
@@ -36,19 +39,18 @@ contract FriendsOnChain is Initializable, ERC1155Upgradeable, OwnableUpgradeable
   event GroupCreated(uint256 tokenId, address[] indexed _to);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
+  constructor() {
+    _disableInitializers();
+  }
 
-  function initialize() initializer public {
-        __ERC1155_init("https://bunches.xyz/foc/metadata/{id}");
-        __Ownable_init();
-        maxSupply = 0;
-        maxOwners = 7;
-        pricePerToken = 0;
-        nextTokenId.increment(); // nextTokenId is initialized to 1, since starting at 0 leads to higher gas cost for the first minter
-
-    }
+  function initialize() public initializer {
+    __ERC1155_init("https://bunches.xyz/foc/metadata/{id}");
+    __Ownable_init();
+    maxSupply = 0;
+    maxOwners = 7;
+    pricePerToken = 0;
+    nextTokenId.increment(); // nextTokenId is initialized to 1, since starting at 0 leads to higher gas cost for the first minter
+  }
 
   /// @notice Mint a token for up to maxOwners addresses.
   /// @dev Payable. Emits GroupCreated event. Checks maxOwners and maxSupply.
@@ -100,7 +102,6 @@ contract FriendsOnChain is Initializable, ERC1155Upgradeable, OwnableUpgradeable
   function countGroups() public view returns (uint256) {
     return nextTokenId.current() - 1;
   }
-  
 
   /// @notice Change the mint price of FOCs.
   /// @dev Only the owner can change. No conversions, so denominated in wei.
