@@ -14,11 +14,13 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const FriendsOnChain = await ethers.getContractFactory("FriendsOnChain")
-  const foc = await upgrades.deployProxy(FriendsOnChain, [])
-  await foc.deployed()
+  const proxyAddress = "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0"
 
-  console.log("Friends On Chain 1155 deployed to:", foc.address)
+  const FriendsOnChainV2 = await ethers.getContractFactory("FriendsOnChainV2")
+  console.log("Preparing to upgrade...")
+  const focV2 = await upgrades.upgradeProxy(proxyAddress, FriendsOnChainV2)
+
+  console.log("FriendsOnChain upgrade to FriendsOnChainV2 at: ", focV2.address)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

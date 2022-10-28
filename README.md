@@ -28,19 +28,19 @@ Add a .env file to the top level dir:
 
 ```env
 PRIVATE_KEY= ... company private key
-ROPSTEN_URL= ... ropsten provider url here
+GOERLI_URL= ... goerli provider url here
 MAINNET_URL= ... mainnet provider url here
 ```
 
 Then, deploy the contract to testnet using
 
-`npx hardhat run scripts/deploy.js --network ropsten`
+`npx hardhat run scripts/deploy.js --network goerli`
 
 and you'll see the contract address.
 
-Once you're dont with testing, deploy it to mainnet using:
+Once you're done with testing, deploy it to mainnet using:
 
-`npx hardhat run scripts/deploy.js --network ropsten`
+`npx hardhat run scripts/deploy.js --network goerli`
 
 > Note: Don't ever share the private key that's used to deploy this.
 
